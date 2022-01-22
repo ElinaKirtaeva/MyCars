@@ -14,7 +14,16 @@ class ViewController: UIViewController {
         return df
     }()
     
-    @IBOutlet weak var segmentedControl: UISegmentedControl!
+    @IBOutlet weak var segmentedControl: UISegmentedControl! {
+        didSet{
+            updateSegmentedControl()
+            segmentedControl.selectedSegmentTintColor = .white
+            let whiteTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+            let blackTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
+            UISegmentedControl.appearance().setTitleTextAttributes(whiteTitleTextAttributes, for: .normal)
+            UISegmentedControl.appearance().setTitleTextAttributes(blackTitleTextAttributes, for: .selected)
+        }
+    }
     @IBOutlet weak var markLabel: UILabel!
     @IBOutlet weak var modelLabel: UILabel!
     @IBOutlet weak var carImageView: UIImageView!
@@ -24,7 +33,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var myChoiceImageView: UIImageView!
     
     @IBAction func segmentedCtrlPressed(_ sender: UISegmentedControl) {
-        
+        updateSegmentedControl()
     }
     
     @IBAction func startEnginePressed(_ sender: UIButton) {
@@ -55,6 +64,18 @@ class ViewController: UIViewController {
         present(alertController, animated: true, completion: nil)
     }
     
+    private func updateSegmentedControl() {
+        let fetchReq: NSFetchRequest<Car> = Car.fetchRequest()
+        let mark = segmentedControl.titleForSegment(at: segmentedControl.selectedSegmentIndex)
+        fetchReq.predicate = NSPredicate(format: "mark == %@", mark!)
+        do {
+            let records = try context.fetch(fetchReq)
+            car = records.first
+            insertDataFrom(selectedCar: car!)
+        } catch let error as NSError {
+            print(error.localizedDescription)
+        }
+    }
     private func updateRating(rating: Double) {
         car.rating = rating
         do {
@@ -71,16 +92,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         getDataFromFile()
-        let fetchReq: NSFetchRequest<Car> = Car.fetchRequest()
-        let mark = segmentedControl.titleForSegment(at: 0)
-        fetchReq.predicate = NSPredicate(format: "mark == %@", mark!)
-        do {
-            let records = try context.fetch(fetchReq)
-            car = records.first
-            insertDataFrom(selectedCar: car!)
-        } catch let error as NSError {
-            print(error.localizedDescription)
-        }
+        
         
         
     }
@@ -144,5 +156,6 @@ class ViewController: UIViewController {
         segmentedControl.backgroundColor = car.tintColor as? UIColor
         
     }
+    
 }
 
